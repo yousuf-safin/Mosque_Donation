@@ -1,0 +1,392 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package com.MosjidDonation.ui.admin;
+
+import com.MosjidDonation.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.swing.table.DefaultTableModel;
+
+/**
+ *
+ * @Yousuf
+ */
+public class DonationViewJFrame extends javax.swing.JFrame {
+
+    /**
+     * Creates new form AdminDonationViewJFrame
+     */
+    public DonationViewJFrame() {
+        initComponents();
+        fetchAndPopulateData();
+        populateAllDonation();
+        populateMosqueComboBox();
+    }
+
+    private void fetchAndPopulateData() {
+        try {
+            Connection connection = DatabaseConnection.getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT "
+                    + "   Donation.Id, "
+                    + "   (SELECT Username FROM Users WHERE Id = Donation.UserId) AS Username, "
+                    + "   Donation.Category, "
+                    + "   Donation.Amount, "
+                    + "   (SELECT Name FROM Mosque WHERE Id = Donation.MosqueId) AS MosqueName, "
+                    + "   Donation.Date AS DonationDate, "
+                    + "   (SELECT Username FROM Admin WHERE Id = "
+                    + "      (SELECT distributedBy FROM Distribution WHERE id = Donation.DistributionId)) AS AdminUsername "
+                    + "FROM Donation "
+                    + "LEFT JOIN Distribution ON Donation.DistributionId = Distribution.Id"
+            );
+
+            DefaultTableModel tableModel = (DefaultTableModel) donationListTable.getModel();
+            tableModel.setRowCount(0); // Clear existing data in the table
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("Id");
+                String username = resultSet.getString("Username");
+                String category = resultSet.getString("Category");
+                double amount = resultSet.getDouble("Amount");
+                String mosqueName = resultSet.getString("MosqueName");
+                String donationDate = resultSet.getString("DonationDate");
+                String adminUsername = resultSet.getString("AdminUsername");
+
+                // Create an array of data for each row
+                Object[] rowData = {
+                    id,
+                    username,
+                    category,
+                    amount,
+                    mosqueName,
+                    donationDate,
+                    adminUsername == null ? "-" : adminUsername
+                };
+
+                // Add the row to the table model
+                tableModel.addRow(rowData);
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void populateMosqueComboBox() {
+        try {
+            Connection connection = DatabaseConnection.getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT Name FROM Mosque");
+
+            mosqueComboBox.removeAllItems(); // Clear existing items
+            mosqueComboBox.addItem("Select Mosque..."); // Add mosque name to the combo box
+
+            while (resultSet.next()) {
+                String mosqueName = resultSet.getString("Name");
+                mosqueComboBox.addItem(mosqueName); // Add mosque name to the combo box
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void populateAllDonation() {
+        try {
+            Connection connection = DatabaseConnection.getConnection();
+
+            String query = "SELECT SUM(Amount) AS TotalDonations FROM Donation";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            double totalDonations = 0.0; // Initialize with a default value
+            if (resultSet.next()) {
+                totalDonations = resultSet.getDouble("TotalDonations");
+            }
+
+            // Convert the double value to a string and set it as label text
+            allDonations.setText(Double.toString(totalDonations));
+
+            resultSet.close();
+            preparedStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method is always regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jLabel2 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        donationListTable = new javax.swing.JTable();
+        back = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        mosqueComboBox = new javax.swing.JComboBox<>();
+        jLabel1 = new javax.swing.JLabel();
+        totalAmount = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        categoryComboBox = new javax.swing.JComboBox<>();
+        jLabel6 = new javax.swing.JLabel();
+        allDonations = new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Mosjid Donation");
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel2.setText("Donation");
+
+        donationListTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
+            },
+            new String [] {
+                "Id", "Username", "Category", "Amount", "Mosque", "Date", "Distributed By"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(donationListTable);
+        if (donationListTable.getColumnModel().getColumnCount() > 0) {
+            donationListTable.getColumnModel().getColumn(0).setResizable(false);
+            donationListTable.getColumnModel().getColumn(0).setPreferredWidth(25);
+            donationListTable.getColumnModel().getColumn(1).setResizable(false);
+            donationListTable.getColumnModel().getColumn(2).setResizable(false);
+            donationListTable.getColumnModel().getColumn(3).setResizable(false);
+            donationListTable.getColumnModel().getColumn(4).setPreferredWidth(150);
+            donationListTable.getColumnModel().getColumn(5).setResizable(false);
+            donationListTable.getColumnModel().getColumn(6).setResizable(false);
+        }
+
+        back.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        back.setText("Back");
+        back.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setFont(new java.awt.Font("Segoe UI Semibold", 0, 18)); // NOI18N
+        jLabel3.setText("Mosque");
+
+        mosqueComboBox.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
+        mosqueComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select Mosque..." }));
+        mosqueComboBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                mosqueComboBoxItemStateChanged(evt);
+            }
+        });
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI Semibold", 0, 18)); // NOI18N
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel1.setText("Total Amount");
+
+        totalAmount.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        totalAmount.setText("0000");
+
+        jLabel5.setFont(new java.awt.Font("Segoe UI Semibold", 0, 18)); // NOI18N
+        jLabel5.setText("Category");
+
+        categoryComboBox.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
+        categoryComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select Category...", "Quran", "Jaynamaz", "Dress", "Food", "Money" }));
+        categoryComboBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                categoryComboBoxItemStateChanged(evt);
+            }
+        });
+
+        jLabel6.setFont(new java.awt.Font("Segoe UI Semibold", 0, 18)); // NOI18N
+        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel6.setText("All Donations");
+
+        allDonations.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        allDonations.setText("0000");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(49, 49, 49)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(87, 87, 87)
+                                .addComponent(mosqueComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jLabel3)
+                                    .addComponent(jLabel5))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(categoryComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(allDonations, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(totalAmount, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addGap(57, 57, 57))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 625, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(back))
+                        .addContainerGap(52, Short.MAX_VALUE))))
+            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(27, 27, 27)
+                .addComponent(jLabel2)
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(mosqueComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3)
+                    .addComponent(totalAmount))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(categoryComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel5)
+                    .addComponent(jLabel6)
+                    .addComponent(allDonations))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 28, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(28, 28, 28)
+                .addComponent(back)
+                .addGap(30, 30, 30))
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void backActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backActionPerformed
+        setVisible(false);
+        AdminDashboardJFrame frame = new AdminDashboardJFrame();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }//GEN-LAST:event_backActionPerformed
+
+    private void categoryComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_categoryComboBoxItemStateChanged
+        setTotalAmount();
+    }//GEN-LAST:event_categoryComboBoxItemStateChanged
+
+    private void mosqueComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_mosqueComboBoxItemStateChanged
+        setTotalAmount();
+    }//GEN-LAST:event_mosqueComboBoxItemStateChanged
+
+    private void setTotalAmount() {
+        if (mosqueComboBox.getSelectedIndex() == 0 || categoryComboBox.getSelectedIndex() == 0) {
+            totalAmount.setText("0.0");
+            return;
+        }
+
+        try {
+            Connection connection = DatabaseConnection.getConnection();
+
+            String selectedMosque = (String) mosqueComboBox.getSelectedItem();
+            String selectedCategory = (String) categoryComboBox.getSelectedItem();
+
+            String query = "SELECT SUM(Amount) AS TotalAmount FROM Donation "
+                    + "WHERE MosqueId = (SELECT Id FROM Mosque WHERE Name = ?) "
+                    + "AND Category = ?";
+
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, selectedMosque);
+            preparedStatement.setString(2, selectedCategory);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            double totalAmountDouble = 0.0;
+            if (resultSet.next()) {
+                totalAmountDouble = resultSet.getDouble("TotalAmount");
+            }
+
+            totalAmount.setText(Double.toString(totalAmountDouble));
+
+            resultSet.close();
+            preparedStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(DonationViewJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(DonationViewJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(DonationViewJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(DonationViewJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new DonationViewJFrame().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel allDonations;
+    private javax.swing.JButton back;
+    private javax.swing.JComboBox<String> categoryComboBox;
+    private javax.swing.JTable donationListTable;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JComboBox<String> mosqueComboBox;
+    private javax.swing.JLabel totalAmount;
+    // End of variables declaration//GEN-END:variables
+}
